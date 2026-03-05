@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chef's Challenge 🍳</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF6B35;
+    --yellow: #FFD166;
+    --green: #06D6A0;
+    --red: #EF476F;
+    --blue: #118AB2;
+    --dark: #1A1A2E;
+    --cream: #FFF8F0;
+    --card: #FFFFFF;
+    --shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, #2a1a4e 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, #1a2a1e 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, #2a1a1a 0%, transparent 80%);
+    z-index: 0;
+  }
+  .floating-emoji {
+    position: fixed;
+    font-size: 2rem;
+    opacity: 0.07;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.07; }
+    90% { opacity: 0.07; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 20px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== START SCREEN ===== */
+  #startScreen {
+    text-align: center;
+    gap: 24px;
+  }
+  .game-logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(3rem, 10vw, 6rem);
+    color: var(--yellow);
+    text-shadow: 4px 4px 0 var(--orange), 8px 8px 0 rgba(255,107,53,0.3);
+    animation: logoBounce 2s ease-in-out infinite;
+    line-height: 1;
+  }
+  @keyframes logoBounce {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+  }
+  .logo-emoji { font-size: clamp(3rem, 8vw, 5rem); display: block; margin-bottom: 8px; }
+  .game-subtitle {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    color: #aaa;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .start-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,209,102,0.3);
+    border-radius: 24px;
+    padding: 28px 36px;
+    max-width: 480px;
+    width: 100%;
+    backdrop-filter: blur(10px);
+  }
+  .start-card p {
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .start-card p strong { color: var(--yellow); }
+  .rule-list {
+    list-style: none;
+    margin-top: 12px;
+    text-align: left;
+  }
+  .rule-list li {
+    color: #ccc;
+    padding: 6px 0;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .rule-list li span.icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  .btn {
+    padding: 14px 36px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn:hover { transform: translateY(-3px); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--orange), var(--yellow));
+    color: var(--dark);
+    box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 30px rgba(255,107,53,0.5); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--yellow);
+    border: 2px solid var(--yellow);
+  }
+  .btn-sm {
+    padding: 10px 24px;
+    font-size: 1rem;
+  }
+
+  /* ===== HUD ===== */
+  .hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(26,26,46,0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(255,209,102,0.2);
+  }
+  .hud-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+  }
+  .hud-label { color: #777; font-size: 0.75rem; font-family: 'Nunito', sans-serif; text-transform: uppercase; letter-spacing: 0.08em; }
+  .hud-val { color: var(--yellow); font-size: 1.2rem; }
+  .score-display { color: var(--green); }
+  .lives-display { color: var(--red); }
+  .level-display { color: var(--blue); }
+  .hud-center { text-align: center; }
+
+  /* ===== CHALLENGE SCREEN ===== */
+  #challengeScreen { padding-top: 80px; gap: 20px; justify-content: flex-start; }
+  .challenge-header {
+    text-align: center;
+    max-width: 700px;
+    width: 100%;
+  }
+  .challenge-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    color: var(--yellow);
+    margin-bottom: 6px;
+  }
+  .challenge-desc {
+    color: #aaa;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .timer-bar-wrap {
+    width: 100%;
+    max-width: 600px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    height: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .timer-bar {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 1s linear, background 0.5s;
+    background: linear-gradient(90deg, var(--green), var(--yellow));
+  }
+  .timer-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: #aaa;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  /* ===== COOKING STEPS ===== */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    max-width: 750px;
+    width: 100%;
+  }
+  .step-card {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 18px;
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--yellow);
+    background: rgba(255,209,102,0.08);
+  }
+  .step-card.completed {
+    border-color: var(--green);
+    background: rgba(6,214,160,0.1);
+  }
+  .step-card.completed::after {
+    content: '✅';
+    position: absolute;
+    top: 8px; right: 8px;
+    font-size: 1rem;
+  }
+  .step-card.wrong {
+    border-color: var(--red);
+    background: rgba(239,71,111,0.1);
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}
+  }
+  .step-emoji { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+  .step-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .step-hint { font-size: 0.8rem; color: #888; }
+  .step-order {
+    position: absolute;
+    top: 8px; left: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem;
+    color: var(--yellow);
+    opacity: 0.7;
+  }
+  .progress-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 600px;
+  }
+  .progress-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    font-family: 'Fredoka One', cursive;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    color: #888;
+    transition: all 0.3s;
+  }
+  .progress-dot.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,209,102,0.1); }
+  .progress-dot.done { border-color: var(--green); color: var(--green); background: rgba(6,214,160,0.1); }
+
+  /* ===== POPUP OVERLAY ===== */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.active { display: flex; }
+  .popup {
+    background: var(--dark);
+    border: 2px solid rgba(255,209,102,0.4);
+    border-radius: 28px;
+    padding: 32px;
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .popup h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    color: var(--yellow);
+    margin-bottom: 8px;
+  }
+  .popup p { color: #bbb; margin-bottom: 16px; font-size: 0.95rem; line-height: 1.6; }
+
+  /* ===== PICK CARDS POPUP ===== */
+  .pick-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+  .pick-card {
+    background: rgba(255,255,255,0.05);
+    border: 3px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 20px 16px;
+    width: 160px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pick-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--yellow);
+    box-shadow: 0 12px 30px rgba(255,209,102,0.2);
+  }
+  .pick-card.correct {
+    border-color: var(--green);
+    background: rgba(6,214,160,0.15);
+    animation: correctPulse 0.5s ease;
+  }
+  .pick-card.wrong-pick {
+    border-color: var(--red);
+    background: rgba(239,71,111,0.15);
+    animation: shake 0.4s ease;
+  }
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .pick-card-emoji { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+  .pick-card-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .pick-card-sub { font-size: 0.75rem; color: #888; }
+  .pick-feedback {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    margin-top: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    display: none;
+  }
+  .pick-feedback.show { display: block; }
+  .pick-feedback.correct-fb { background: rgba(6,214,160,0.15); color: var(--green); }
+  .pick-feedback.wrong-fb { background: rgba(239,71,111,0.15); color: var(--red); }
+
+  /* ===== QUESTION POPUP ===== */
+  .question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    color: #fff;
+    margin: 16px 0;
+    line-height: 1.5;
+  }
+  .answer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .answer-btn {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 14px 12px;
+    color: #ddd;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    line-height: 1.4;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--yellow);
+    background: rgba(255,209,102,0.08);
+    color: var(--yellow);
+  }
+  .answer-btn.correct-ans {
+    border-color: var(--green);
+    background: rgba(6,214,160,0.15);
+    color: var(--green);
+  }
+  .answer-btn.wrong-ans {
+    border-color: var(--red);
+    background: rgba(239,71,111,0.15);
+    color: var(--red);
+  }
+  .answer-btn:disabled { cursor: default; }
+  .q-feedback {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 12px;
+    margin-top: 8px;
+    display: none;
+  }
+  .q-feedback.show { display: block; }
+  .q-feedback.good { background: rgba(6,214,160,0.15); color: var(--green); }
+  .q-feedback.bad { background: rgba(239,71,111,0.15); color: var(--red); }
+  .q-explanation { color: #aaa; font-size: 0.85rem; margin-top: 8px; font-style: italic; }
+
+  /* ===== RESULT SCREEN ===== */
+  #resultScreen { gap: 24px; }
+  .result-emoji { font-size: 5rem; animation: logoBounce 2s infinite; }
+  .result-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 7vw, 4rem);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--orange);
+  }
+  .result-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,209,102,0.3);
+    border-radius: 24px;
+    padding: 28px 36px;
+    max-width: 440px;
+    width: 100%;
+    backdrop-filter: blur(10px);
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: #888; font-size: 0.95rem; }
+  .stat-val { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: var(--yellow); }
+  .star-row { display: flex; gap: 6px; justify-content: center; font-size: 2.5rem; margin: 8px 0; }
+
+  /* ===== NOTIFICATION ===== */
+  .notif {
+    position: fixed;
+    top: 80px; right: 20px;
+    background: var(--dark);
+    border: 2px solid var(--green);
+    border-radius: 14px;
+    padding: 12px 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    color: var(--green);
+    z-index: 999;
+    transform: translateX(200%);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 4px 20px rgba(6,214,160,0.3);
+    max-width: 280px;
+  }
+  .notif.show { transform: translateX(0); }
+  .notif.bad { border-color: var(--red); color: var(--red); box-shadow: 0 4px 20px rgba(239,71,111,0.3); }
+
+  /* ===== LEVEL COMPLETE ===== */
+  .confetti { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:500; }
+  .conf-piece {
+    position: absolute;
+    width: 10px; height: 10px;
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @media (max-width: 500px) {
+    .pick-cards { gap: 10px; }
+    .pick-card { width: 130px; padding: 16px 10px; }
+    .answer-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating bg emojis -->
+<div id="floatingBg"></div>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<!-- HUD -->
+<div class="hud" id="hud" style="display:none">
+  <div class="hud-item">
+    <div>
+      <div class="hud-label">Score</div>
+      <div class="hud-val score-display" id="hudScore">0</div>
+    </div>
+  </div>
+  <div class="hud-item hud-center">
+    <div>
+      <div class="hud-label">Level</div>
+      <div class="hud-val level-display" id="hudLevel">1 / 4</div>
+    </div>
+  </div>
+  <div class="hud-item">
+    <div style="text-align:right">
+      <div class="hud-label">Lives</div>
+      <div class="hud-val lives-display" id="hudLives">❤️❤️❤️</div>
+    </div>
+  </div>
+</div>
+
+<!-- Confetti canvas -->
+<div class="confetti" id="confettiContainer"></div>
+
+<!-- ===== START SCREEN ===== -->
+<div class="screen active" id="startScreen">
+  <div class="game-logo">
+    <span class="logo-emoji">🍳</span>
+    Chef's Challenge
+  </div>
+  <p class="game-subtitle">The Ultimate Cooking Quiz Game</p>
+  <div class="start-card">
+    <p>Test your cooking knowledge across <strong>4 exciting challenges</strong>! 🎮</p>
+    <ul class="rule-list">
+      <li><span class="icon">🃏</span> Before each challenge, <strong>pick the right item</strong> — hygiene, tools, or ingredients</li>
+      <li><span class="icon">🔢</span> Complete cooking steps <strong>in the correct order</strong></li>
+      <li><span class="icon">❓</span> Answer a trivia question after each challenge</li>
+      <li><span class="icon">⭐</span> Earn stars and climb to <strong>Master Chef!</strong></li>
+    </ul>
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">🍴 Start Cooking!</button>
+</div>
+
+<!-- ===== CHALLENGE SCREEN ===== -->
+<div class="screen" id="challengeScreen">
+  <div class="challenge-header">
+    <div class="challenge-title" id="challengeTitle"></div>
+    <div class="challenge-desc" id="challengeDesc"></div>
+  </div>
+  <div class="progress-row" id="progressRow"></div>
+  <div class="timer-text" id="timerText">Time remaining: <span id="timerSec">30</span>s</div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar"></div></div>
+  <div class="steps-grid" id="stepsGrid"></div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div class="screen" id="resultScreen">
+  <div class="result-emoji" id="resultEmoji"></div>
+  <div class="result-title" id="resultTitle"></div>
+  <div class="star-row" id="starRow"></div>
+  <div class="result-card">
+    <div class="stat-row"><span class="stat-label">🏆 Final Score</span><span class="stat-val" id="finalScore"></span></div>
+    <div class="stat-row"><span class="stat-label">✅ Challenges Done</span><span class="stat-val" id="finalChallenges"></span></div>
+    <div class="stat-row"><span class="stat-label">❓ Questions Correct</span><span class="stat-val" id="finalQuestions"></span></div>
+    <div class="stat-row"><span class="stat-label">🃏 Picks Correct</span><span class="stat-val" id="finalPicks"></span></div>
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-primary" onclick="startGame()">🔄 Play Again</button>
+    <button class="btn btn-secondary" onclick="showScreen('startScreen')">🏠 Main Menu</button>
+  </div>
+</div>
+
+<!-- ===== PICK POPUP ===== -->
+<div class="overlay" id="pickOverlay">
+  <div class="popup">
+    <h2 id="pickTitle">🃏 Choose Wisely!</h2>
+    <p id="pickDesc">Before you start cooking, pick the correct item from the three choices below:</p>
+    <div class="pick-cards" id="pickCards"></div>
+    <div class="pick-feedback" id="pickFeedback"></div>
+    <button class="btn btn-primary btn-sm" id="pickNextBtn" style="display:none;margin-top:12px" onclick="closePick()">Continue to Challenge →</button>
+  </div>
+</div>
+
+<!-- ===== QUESTION POPUP ===== -->
+<div class="overlay" id="questionOverlay">
+  <div class="popup">
+    <h2>🧠 Quiz Time!</h2>
+    <p>You finished the challenge! Now answer this question to earn bonus points:</p>
+    <div class="question-text" id="questionText"></div>
+    <div class="answer-grid" id="answerGrid"></div>
+    <div class="q-feedback" id="qFeedback"></div>
+    <div class="q-explanation" id="qExplanation"></div>
+    <button class="btn btn-primary btn-sm" id="qNextBtn" style="display:none;margin-top:16px" onclick="nextLevel()">Next Challenge →</button>
+  </div>
+</div>
+
+<!-- ===== LEVEL COMPLETE POPUP ===== -->
+<div class="overlay" id="lvlOverlay">
+  <div class="popup">
+    <div style="font-size:4rem;margin-bottom:12px" id="lvlEmoji">🎉</div>
+    <h2 id="lvlTitle">Challenge Complete!</h2>
+    <p id="lvlMsg"></p>
+    <button class="btn btn-primary" id="lvlBtn" onclick="showQuestion()">Answer Quiz Question</button>
+  </div>
+</div>
+
+<script>
+// ===== GAME DATA =====
+const LEVELS = [
+  {
+    title: "🥗 Fresh Salad Prep",
+    desc: "A customer ordered a garden salad. Complete the steps in the right order!",
+    emoji: "🥗",
+    pickCategory: "proper hygiene",
+    pickQuestion: "Before handling fresh vegetables, what should you do?",
+    pickOptions: [
+      { emoji: "🧼", label: "Wash Hands", sub: "Proper Hygiene", correct: true },
+      { emoji: "🔪", label: "Chef's Knife", sub: "Cooking Tool", correct: false },
+      { emoji: "🥕", label: "Carrots", sub: "Ingredient", correct: false }
+    ],
+    steps: [
+      { emoji: "🧼", name: "Wash Hands", hint: "Always first!", order: 1 },
+      { emoji: "🥬", name: "Wash Veggies", hint: "Rinse under cold water", order: 2 },
+      { emoji: "🔪", name: "Chop Veggies", hint: "Cut into bite-sized pieces", order: 3 },
+      { emoji: "🥣", name: "Toss Salad", hint: "Mix everything together", order: 4 },
+      { emoji: "🫙", name: "Add Dressing", hint: "Drizzle on top", order: 5 },
+    ],
+    question: "What is the MOST important reason to wash your hands before food preparation?",
+    answers: [
+      { text: "To remove germs and prevent foodborne illness", correct: true },
+      { text: "To make your hands smell nice", correct: false },
+      { text: "To soften your hands", correct: false },
+      { text: "Because it's a cooking rule", correct: false }
+    ],
+    explanation: "Handwashing removes harmful bacteria and viruses that could contaminate food and cause serious illness."
+  },
+  {
+    title: "🍳 Classic Omelette",
+    desc: "Make a perfect fluffy omelette. Steps must be done in order!",
+    emoji: "🍳",
+    pickCategory: "cooking tools",
+    pickQuestion: "Which tool is essential for making an omelette?",
+    pickOptions: [
+      { emoji: "🧤", label: "Gloves", sub: "Hygiene Item", correct: false },
+      { emoji: "🍳", label: "Non-stick Pan", sub: "Cooking Tool", correct: true },
+      { emoji: "🧅", label: "Onion", sub: "Ingredient", correct: false }
+    ],
+    steps: [
+      { emoji: "🥚", name: "Crack Eggs", hint: "Break into a bowl", order: 1 },
+      { emoji: "🥄", name: "Beat Eggs", hint: "Whisk until fluffy", order: 2 },
+      { emoji: "🧈", name: "Heat Butter", hint: "Medium heat in pan", order: 3 },
+      { emoji: "🍳", name: "Pour Mixture", hint: "Into the pan", order: 4 },
+      { emoji: "🧀", name: "Add Filling", hint: "Cheese & veggies", order: 5 },
+      { emoji: "🌮", name: "Fold & Plate", hint: "Fold and serve!", order: 6 },
+    ],
+    question: "What temperature should you cook an omelette at for the BEST result?",
+    answers: [
+      { text: "High heat for speed", correct: false },
+      { text: "Medium-low heat for a soft, creamy texture", correct: true },
+      { text: "Cold pan from the start", correct: false },
+      { text: "No heat needed if whisked well", correct: false }
+    ],
+    explanation: "Medium-low heat allows the eggs to set gently without overcooking, resulting in a silky smooth texture."
+  },
+  {
+    title: "🍝 Spaghetti Bolognese",
+    desc: "Cook a hearty pasta dish! Follow the steps carefully.",
+    emoji: "🍝",
+    pickCategory: "cooking ingredients",
+    pickQuestion: "Which ingredient is the base of a Bolognese sauce?",
+    pickOptions: [
+      { emoji: "🧤", label: "Gloves", sub: "Hygiene Item", correct: false },
+      { emoji: "🥄", name: "Wooden Spoon", sub: "Cooking Tool", correct: false },
+      { emoji: "🍅", label: "Tomatoes", sub: "Ingredient", correct: true }
+    ],
+    steps: [
+      { emoji: "🧄", name: "Sauté Garlic", hint: "Golden & fragrant", order: 1 },
+      { emoji: "🥩", name: "Brown Meat", hint: "Cook ground beef", order: 2 },
+      { emoji: "🍅", name: "Add Tomatoes", hint: "Crushed & canned", order: 3 },
+      { emoji: "⏲️", name: "Simmer Sauce", hint: "20 mins on low", order: 4 },
+      { emoji: "🍝", name: "Boil Pasta", hint: "Al dente, 8 mins", order: 5 },
+      { emoji: "🧀", name: "Serve & Top", hint: "Parmesan on top!", order: 6 },
+    ],
+    question: "What does 'al dente' mean when cooking pasta?",
+    answers: [
+      { text: "Soft and fully cooked through", correct: false },
+      { text: "Firm to the bite with slight resistance", correct: true },
+      { text: "Overcooked and mushy", correct: false },
+      { text: "Raw in the center", correct: false }
+    ],
+    explanation: "'Al dente' is Italian for 'to the tooth' — pasta should have a slight resistance when bitten, not be mushy."
+  },
+  {
+    title: "🎂 Birthday Cake",
+    desc: "Bake a beautiful birthday cake from scratch! Mind the order!",
+    emoji: "🎂",
+    pickCategory: "proper hygiene",
+    pickQuestion: "What hygiene step is critical when baking for others?",
+    pickOptions: [
+      { emoji: "😷", label: "Face Mask", sub: "Proper Hygiene", correct: true },
+      { emoji: "🫙", label: "Mixing Bowl", sub: "Cooking Tool", correct: false },
+      { emoji: "🍫", label: "Chocolate", sub: "Ingredient", correct: false }
+    ],
+    steps: [
+      { emoji: "🌡️", name: "Preheat Oven", hint: "180°C / 350°F", order: 1 },
+      { emoji: "🧁", name: "Mix Dry Ingredients", hint: "Flour, sugar, baking powder", order: 2 },
+      { emoji: "🥚", name: "Beat Wet Ingredients", hint: "Eggs, butter, milk", order: 3 },
+      { emoji: "🥣", name: "Combine Batter", hint: "Fold gently", order: 4 },
+      { emoji: "🫙", name: "Pour into Pan", hint: "Grease pan first", order: 5 },
+      { emoji: "🔥", name: "Bake 30 mins", hint: "Until toothpick clean", order: 6 },
+      { emoji: "🎂", name: "Frost & Decorate", hint: "Cool first!", order: 7 },
+    ],
+    question: "Why should you let a cake COOL completely before frosting?",
+    answers: [
+      { text: "It's just tradition, no real reason", correct: false },
+      { text: "So the frosting melts into the cake for flavor", correct: false },
+      { text: "To prevent frosting from melting and sliding off", correct: true },
+      { text: "To make the cake harder", correct: false }
+    ],
+    explanation: "A warm cake will melt buttercream or whipped frosting, causing it to slide off. Cooling fully ensures the frosting stays perfectly in place."
+  }
+];
+
+// ===== STATE =====
+let state = {
+  level: 0,
+  score: 0,
+  lives: 3,
+  nextStep: 1,
+  timerInterval: null,
+  timeLeft: 30,
+  totalTime: 30,
+  picksCorrect: 0,
+  questionsCorrect: 0,
+  challengesDone: 0,
+  pickAnswered: false
+};
+
+// ===== INIT =====
+function initBg() {
+  const emojis = ['🍳','🥗','🍝','🎂','🥕','🧅','🧄','🍅','🥚','🧀','🔪','🥣','🍴','⭐','✨'];
+  const container = document.getElementById('floatingBg');
+  container.innerHTML = '';
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('div');
+    el.className = 'floating-emoji';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (8 + Math.random() * 14) + 's';
+    el.style.animationDelay = (Math.random() * 12) + 's';
+    el.style.fontSize = (1.2 + Math.random() * 1.5) + 'rem';
+    container.appendChild(el);
+  }
+}
+
+function startGame() {
+  state = { level: 0, score: 0, lives: 3, nextStep: 1, timerInterval: null,
+    timeLeft: 30, totalTime: 30, picksCorrect: 0, questionsCorrect: 0,
+    challengesDone: 0, pickAnswered: false };
+  updateHUD();
+  document.getElementById('hud').style.display = 'flex';
+  showScreen('challengeScreen');
+  loadLevel();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'startScreen' || id === 'resultScreen') {
+    document.getElementById('hud').style.display = 'none';
+  }
+}
+
+function updateHUD() {
+  document.getElementById('hudScore').textContent = state.score;
+  document.getElementById('hudLevel').textContent = `${state.level + 1} / ${LEVELS.length}`;
+  const hearts = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0, 3 - state.lives));
+  document.getElementById('hudLives').textContent = hearts;
+}
+
+// ===== LEVEL LOADING =====
+function loadLevel() {
+  const lvl = LEVELS[state.level];
+  state.nextStep = 1;
+  state.pickAnswered = false;
+  updateHUD();
+
+  // Set challenge info
+  document.getElementById('challengeTitle').textContent = lvl.title;
+  document.getElementById('challengeDesc').textContent = lvl.desc;
+
+  // Progress dots
+  const pr = document.getElementById('progressRow');
+  pr.innerHTML = '';
+  lvl.steps.forEach((s, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot' + (i === 0 ? ' active' : '');
+    dot.id = `dot${i}`;
+    dot.textContent = i + 1;
+    pr.appendChild(dot);
+  });
+
+  // Steps grid - SHUFFLED
+  const stepsGrid = document.getElementById('stepsGrid');
+  stepsGrid.innerHTML = '';
+  const shuffled = [...lvl.steps].sort(() => Math.random() - 0.5);
+  shuffled.forEach(step => {
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.id = `step${step.order}`;
+    card.onclick = () => clickStep(step.order, card);
+    card.innerHTML = `
+      <span class="step-order">#${step.order}</span>
+      <span class="step-emoji">${step.emoji}</span>
+      <div class="step-name">${step.name}</div>
+      <div class="step-hint">${step.hint}</div>
+    `;
+    stepsGrid.appendChild(card);
+  });
+
+  // Show pick popup first
+  showPickPopup(lvl);
+}
+
+// ===== PICK POPUP =====
+function showPickPopup(lvl) {
+  const overlay = document.getElementById('pickOverlay');
+  document.getElementById('pickTitle').textContent = `🃏 Pick the Right Item!`;
+  document.getElementById('pickDesc').textContent = lvl.pickQuestion;
+  document.getElementById('pickFeedback').className = 'pick-feedback';
+  document.getElementById('pickFeedback').textContent = '';
+  document.getElementById('pickNextBtn').style.display = 'none';
+
+  const container = document.getElementById('pickCards');
+  container.innerHTML = '';
+  const shuffledOpts = [...lvl.pickOptions].sort(() => Math.random() - 0.5);
+  shuffledOpts.forEach(opt => {
+    const card = document.createElement('div');
+    card.className = 'pick-card';
+    card.innerHTML = `
+      <span class="pick-card-emoji">${opt.emoji}</span>
+      <div class="pick-card-label">${opt.label}</div>
+      <div class="pick-card-sub">${opt.sub}</div>
+    `;
+    card.onclick = () => handlePick(opt, card, container);
+    container.appendChild(card);
+  });
+
+  overlay.classList.add('active');
+}
+
+function handlePick(opt, card, container) {
+  if (state.pickAnswered) return;
+  state.pickAnswered = true;
+  const fb = document.getElementById('pickFeedback');
+
+  // Reveal all
+  container.querySelectorAll('.pick-card').forEach(c => {
+    c.onclick = null;
+    c.style.cursor = 'default';
+  });
+
+  if (opt.correct) {
+    card.classList.add('correct');
+    fb.textContent = '✅ Correct! That\'s the right choice!';
+    fb.className = 'pick-feedback show correct-fb';
+    state.score += 50;
+    state.picksCorrect++;
+    showNotif('+50 pts! Great pick! 🎯');
+  } else {
+    card.classList.add('wrong-pick');
+    fb.textContent = '❌ Not quite! Check the correct answer below.';
+    fb.className = 'pick-feedback show wrong-fb';
+    // highlight correct
+    container.querySelectorAll('.pick-card').forEach((c, i) => {
+      const optData = [...document.getElementById('pickCards').querySelectorAll('.pick-card')];
+    });
+    // find and highlight correct
+    const allCards = container.querySelectorAll('.pick-card');
+    allCards.forEach(c => {
+      const label = c.querySelector('.pick-card-label').textContent;
+      const correctOpt = document.getElementById('pickCards');
+      // just mark card with correct visually — re-check by label
+    });
+    state.lives = Math.max(0, state.lives - 1);
+    updateHUD();
+    if (state.lives === 0) {
+      setTimeout(() => { closePick(); gameOver(); }, 1500);
+      return;
+    }
+  }
+
+  updateHUD();
+  document.getElementById('pickNextBtn').style.display = 'inline-block';
+}
+
+function closePick() {
+  document.getElementById('pickOverlay').classList.remove('active');
+  startTimer();
+}
+
+// ===== TIMER =====
+function startTimer() {
+  const lvl = LEVELS[state.level];
+  state.timeLeft = 20 + lvl.steps.length * 5;
+  state.totalTime = state.timeLeft;
+  clearInterval(state.timerInterval);
+  updateTimer();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimer();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      timeUp();
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  document.getElementById('timerSec').textContent = state.timeLeft;
+  const pct = (state.timeLeft / state.totalTime) * 100;
+  const bar = document.getElementById('timerBar');
+  bar.style.width = pct + '%';
+  if (pct > 50) bar.style.background = 'linear-gradient(90deg, #06D6A0, #FFD166)';
+  else if (pct > 25) bar.style.background = 'linear-gradient(90deg, #FFD166, #FF6B35)';
+  else bar.style.background = 'linear-gradient(90deg, #EF476F, #FF6B35)';
+}
+
+function timeUp() {
+  showNotif('⏰ Time\'s up!', true);
+  state.lives = Math.max(0, state.lives - 1);
+  updateHUD();
+  if (state.lives === 0) { gameOver(); return; }
+  // Reset and try again
+  setTimeout(() => loadLevel(), 1200);
+}
+
+// ===== STEP CLICKING =====
+function clickStep(order, card) {
+  if (card.classList.contains('completed')) return;
+
+  if (order === state.nextStep) {
+    // Correct!
+    card.classList.add('completed');
+    card.onclick = null;
+    state.score += 20;
+    updateHUD();
+    showNotif(`+20 pts! Step ${order} done! 🍴`);
+
+    // Update progress dot
+    const dot = document.getElementById(`dot${order - 1}`);
+    if (dot) { dot.classList.remove('active'); dot.classList.add('done'); dot.textContent = '✓'; }
+    const nextDot = document.getElementById(`dot${order}`);
+    if (nextDot) nextDot.classList.add('active');
+
+    state.nextStep++;
+    const lvl = LEVELS[state.level];
+    if (state.nextStep > lvl.steps.length) {
+      clearInterval(state.timerInterval);
+      state.score += state.timeLeft * 2; // time bonus
+      state.challengesDone++;
+      setTimeout(() => showLevelComplete(), 600);
+    }
+  } else {
+    // Wrong order!
+    card.classList.add('wrong');
+    setTimeout(() => card.classList.remove('wrong'), 500);
+    state.lives = Math.max(0, state.lives - 1);
+    updateHUD();
+    showNotif(`Wrong order! Step ${state.nextStep} is next!`, true);
+    if (state.lives === 0) {
+      clearInterval(state.timerInterval);
+      setTimeout(() => gameOver(), 800);
+    }
+  }
+}
+
+// ===== LEVEL COMPLETE =====
+function showLevelComplete() {
+  const lvl = LEVELS[state.level];
+  const overlay = document.getElementById('lvlOverlay');
+  document.getElementById('lvlEmoji').textContent = lvl.emoji;
+  document.getElementById('lvlTitle').textContent = `Challenge Complete! 🎉`;
+  document.getElementById('lvlMsg').textContent = `Excellent work! You completed "${lvl.title.replace(/^.{2}/, '')}" with ${state.timeLeft}s remaining. Bonus: +${state.timeLeft * 2} pts!`;
+  overlay.classList.add('active');
+  spawnConfetti();
+}
+
+function showQuestion() {
+  document.getElementById('lvlOverlay').classList.remove('active');
+  const lvl = LEVELS[state.level];
+  const overlay = document.getElementById('questionOverlay');
+  document.getElementById('questionText').textContent = lvl.question;
+  document.getElementById('qFeedback').className = 'q-feedback';
+  document.getElementById('qFeedback').textContent = '';
+  document.getElementById('qExplanation').textContent = '';
+  document.getElementById('qNextBtn').style.display = 'none';
+
+  const grid = document.getElementById('answerGrid');
+  grid.innerHTML = '';
+  const shuffled = [...lvl.answers].sort(() => Math.random() - 0.5);
+  shuffled.forEach(ans => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = ans.text;
+    btn.onclick = () => handleAnswer(ans, btn, grid, lvl);
+    grid.appendChild(btn);
+  });
+
+  overlay.classList.add('active');
+}
+
+function handleAnswer(ans, btn, grid, lvl) {
+  grid.querySelectorAll('.answer-btn').forEach(b => { b.disabled = true; });
+  const fb = document.getElementById('qFeedback');
+  const exp = document.getElementById('qExplanation');
+
+  if (ans.correct) {
+    btn.classList.add('correct-ans');
+    fb.textContent = '🎉 Correct! Well done, Chef!';
+    fb.className = 'q-feedback show good';
+    state.score += 100;
+    state.questionsCorrect++;
+    showNotif('+100 pts! Brilliant! 🧠');
+  } else {
+    btn.classList.add('wrong-ans');
+    fb.textContent = '❌ Not quite! Here\'s the right answer:';
+    fb.className = 'q-feedback show bad';
+    grid.querySelectorAll('.answer-btn').forEach(b => {
+      // find correct one by re-checking the answer list
+    });
+    // Reveal correct from lvl.answers
+    const correctText = lvl.answers.find(a => a.correct).text;
+    grid.querySelectorAll('.answer-btn').forEach(b => {
+      if (b.textContent === correctText) b.classList.add('correct-ans');
+    });
+  }
+
+  exp.textContent = lvl.explanation;
+  updateHUD();
+  document.getElementById('qNextBtn').style.display = 'inline-block';
+
+  const isLast = state.level >= LEVELS.length - 1;
+  document.getElementById('qNextBtn').textContent = isLast ? 'See Results 🏆' : 'Next Challenge →';
+}
+
+function nextLevel() {
+  document.getElementById('questionOverlay').classList.remove('active');
+  state.level++;
+  if (state.level >= LEVELS.length) {
+    showResults();
+  } else {
+    updateHUD();
+    loadLevel();
+  }
+}
+
+// ===== GAME OVER =====
+function gameOver() {
+  document.getElementById('hud').style.display = 'none';
+  showScreen('resultScreen');
+  document.getElementById('resultEmoji').textContent = '😢';
+  document.getElementById('resultTitle').textContent = 'Game Over!';
+  document.getElementById('starRow').textContent = '⭐';
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalChallenges').textContent = `${state.challengesDone} / ${LEVELS.length}`;
+  document.getElementById('finalQuestions').textContent = `${state.questionsCorrect}`;
+  document.getElementById('finalPicks').textContent = `${state.picksCorrect}`;
+}
+
+// ===== SHOW RESULTS =====
+function showResults() {
+  document.getElementById('hud').style.display = 'none';
+  showScreen('resultScreen');
+  spawnConfetti();
+
+  const pct = state.score / (LEVELS.length * 400);
+  let emoji, title, stars;
+  if (pct >= 0.85) { emoji = '🏆'; title = 'Master Chef!'; stars = '⭐⭐⭐'; }
+  else if (pct >= 0.6) { emoji = '👨‍🍳'; title = 'Skilled Cook!'; stars = '⭐⭐'; }
+  else { emoji = '🍴'; title = 'Cooking Student!'; stars = '⭐'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('starRow').textContent = stars;
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalChallenges').textContent = `${state.challengesDone} / ${LEVELS.length}`;
+  document.getElementById('finalQuestions').textContent = `${state.questionsCorrect} / ${LEVELS.length}`;
+  document.getElementById('finalPicks').textContent = `${state.picksCorrect} / ${LEVELS.length}`;
+}
+
+// ===== UTILS =====
+function showNotif(msg, bad = false) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.className = 'notif show' + (bad ? ' bad' : '');
+  clearTimeout(n._t);
+  n._t = setTimeout(() => { n.className = 'notif' + (bad ? ' bad' : ''); }, 2200);
+}
+
+function spawnConfetti() {
+  const container = document.getElementById('confettiContainer');
+  container.innerHTML = '';
+  const colors = ['#FF6B35','#FFD166','#06D6A0','#EF476F','#118AB2','#fff'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'conf-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.top = '-20px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// Init
+initBg();
+</script>
+</body>
+</html>
